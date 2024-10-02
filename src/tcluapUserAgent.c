@@ -5,6 +5,7 @@
  */
 
 #include "tcluapUserAgent.h"
+#include "tcluapCache.h"
 
 static const struct {
 
@@ -52,6 +53,8 @@ typedef struct ThreadSpecificData {
     Tcl_Obj *key_family;
     Tcl_Obj *key_major, *key_minor, *key_patch, *key_patch_minor;
 
+    uap_CacheType *val_cache;
+
 } ThreadSpecificData;
 
 Tcl_Obj *uap_UserAgentParse(Tcl_Obj *data) {
@@ -60,7 +63,19 @@ Tcl_Obj *uap_UserAgentParse(Tcl_Obj *data) {
 
     ThreadSpecificData *tsdPtr = TCL_TSD_INIT(&dataKey);
 
-    Tcl_Obj *result = Tcl_NewDictObj();
+    Tcl_Obj *result;
+
+    if (tsdPtr->val_cache == NULL) {
+        tsdPtr->val_cache = uap_CacheInit();
+    } else {
+        result = uap_CacheGet(tsdPtr->val_cache, data);
+        if (result != NULL) {
+            DBG2(printf("return from cache"));
+            goto done;
+        }
+    }
+
+    result = Tcl_NewDictObj();
 
     int i;
     for (i = 0; i < UAPTCL_REGEX_COUNT; i++) {
@@ -84,8 +99,8 @@ Tcl_Obj *uap_UserAgentParse(Tcl_Obj *data) {
     if (i == UAPTCL_REGEX_COUNT) {
         Tcl_InitObject(tsdPtr->other, "Other");
         Tcl_DictObjPut(NULL, result, tsdPtr->key_family, tsdPtr->other);
-        DBG2(printf("return: ok (not found)"));
-        return result;
+        DBG2(printf("not found"));
+        goto cache;
     }
 
     Tcl_InitObject(tsdPtr->key_major, "major");
@@ -116,6 +131,12 @@ Tcl_Obj *uap_UserAgentParse(Tcl_Obj *data) {
     uap_CreateKeyWithDefaultSubmatch(tsdPtr->key_patch_minor,
         re_db[i].v4, re_db[i].v4_ph,
         tsdPtr->cache[i].v4, 5);
+
+cache:
+
+    uap_CachePut(tsdPtr->val_cache, data, result);
+
+done:
 
     DBG2(printf("return: ok"));
     return result;
@@ -173,6 +194,11 @@ void uap_UserAgentThreadExit(ClientData clientData) {
     Tcl_FreeObject(tsdPtr->key_minor);
     Tcl_FreeObject(tsdPtr->key_patch);
     Tcl_FreeObject(tsdPtr->key_patch_minor);
+
+    if (tsdPtr->val_cache != NULL) {
+        uap_CacheFree(tsdPtr->val_cache);
+        tsdPtr->val_cache = NULL;
+    }
 
     DBG2(printf("return: ok"));
 

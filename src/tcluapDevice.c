@@ -5,6 +5,7 @@
  */
 
 #include "tcluapDevice.h"
+#include "tcluapCache.h"
 
 static const struct {
 
@@ -45,6 +46,8 @@ typedef struct ThreadSpecificData {
 
     Tcl_Obj *key_family, *key_brand, *key_model;
 
+    uap_CacheType *val_cache;
+
 } ThreadSpecificData;
 
 
@@ -54,7 +57,19 @@ Tcl_Obj *uap_DeviceParse(Tcl_Obj *data) {
 
     ThreadSpecificData *tsdPtr = TCL_TSD_INIT(&dataKey);
 
-    Tcl_Obj *result = Tcl_NewDictObj();
+    Tcl_Obj *result;
+
+    if (tsdPtr->val_cache == NULL) {
+        tsdPtr->val_cache = uap_CacheInit();
+    } else {
+        result = uap_CacheGet(tsdPtr->val_cache, data);
+        if (result != NULL) {
+            DBG2(printf("return from cache"));
+            goto done;
+        }
+    }
+
+    result = Tcl_NewDictObj();
 
     int i;
     for (i = 0; i < UAPTCL_REGEX_COUNT; i++) {
@@ -74,12 +89,12 @@ Tcl_Obj *uap_DeviceParse(Tcl_Obj *data) {
     }
 
     Tcl_InitObject(tsdPtr->key_family, "family");
-    Tcl_InitObject(tsdPtr->other, "Other");
 
     if (i == UAPTCL_REGEX_COUNT) {
+        Tcl_InitObject(tsdPtr->other, "Other");
         Tcl_DictObjPut(NULL, result, tsdPtr->key_family, tsdPtr->other);
-        DBG2(printf("return: ok (not found)"));
-        return result;
+        DBG2(printf("not found"));
+        goto cache;
     }
 
     Tcl_InitObject(tsdPtr->key_brand,  "brand");
@@ -100,6 +115,12 @@ Tcl_Obj *uap_DeviceParse(Tcl_Obj *data) {
     uap_CreateKeyWithDefaultSubmatch(tsdPtr->key_model,
         re_db[i].model, re_db[i].model_ph,
         tsdPtr->cache[i].model, 1);
+
+cache:
+
+    uap_CachePut(tsdPtr->val_cache, data, result);
+
+done:
 
     DBG2(printf("return: ok"));
     return result;
@@ -153,6 +174,11 @@ void uap_DeviceThreadExit(ClientData clientData) {
     Tcl_FreeObject(tsdPtr->key_family);
     Tcl_FreeObject(tsdPtr->key_brand);
     Tcl_FreeObject(tsdPtr->key_model);
+
+    if (tsdPtr->val_cache != NULL) {
+        uap_CacheFree(tsdPtr->val_cache);
+        tsdPtr->val_cache = NULL;
+    }
 
     DBG2(printf("return: ok"));
 

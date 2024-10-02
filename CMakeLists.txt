@@ -123,9 +123,8 @@ add_library(tcluap SHARED
     src/tcluapDevice.c
     src/tcluapDevice.h
     src/tcluapDevice_re.h
-    tests/data/tests/test_device.data
-    tests/data/tests/test_os.data
-    tests/data/tests/test_ua.data
+    src/tcluapCache.c
+    src/tcluapCache.h
 )
 
 set_target_properties(tcluap PROPERTIES POSITION_INDEPENDENT_CODE ON)
