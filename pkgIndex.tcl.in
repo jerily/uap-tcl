@@ -1,0 +1,3 @@
+set dir [file dirname [info script]]
+
+package ifneeded uap @PROJECT_VERSION@ [list load [file join $dir libtcluap[info sharedlibextension]]]

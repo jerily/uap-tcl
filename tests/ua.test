@@ -1,0 +1,21 @@
+package require tcltest
+package require uap
+
+namespace import -force ::tcltest::test
+
+::tcltest::configure {*}$argv
+
+source [file join [file dirname [info script]] common.tcl]
+
+set fp [open [file join [file dirname [info script]] test_ua.data] r]
+set data [split [read $fp] \n]
+close $fp
+
+foreach rec $data {
+
+    lassign $rec source result
+    test uapUA-[incr counter] $source -body {
+        lsort -stride 2 -index 0 [::uap::parse $source ua]
+    } -result [lsort -stride 2 -index 0 $result]
+
+}
