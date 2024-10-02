@@ -82,25 +82,34 @@ add_custom_command(
   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/uap-core/regexes.yaml
 )
 
-add_custom_command(
-  OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_device.data
-  COMMAND ${TCL_TCLSH} ${CMAKE_CURRENT_SOURCE_DIR}/tools/test_normalize.tcl test_device >${CMAKE_CURRENT_SOURCE_DIR}/tests/test_device.data
-  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/uap-core/tests/test_device.yaml
-)
+set(TEST_DATA_FILES)
 
-add_custom_command(
-  OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_os.data
-  COMMAND ${TCL_TCLSH} ${CMAKE_CURRENT_SOURCE_DIR}/tools/test_normalize.tcl test_os >${CMAKE_CURRENT_SOURCE_DIR}/tests/test_os.data
-  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/uap-core/tests/test_os.yaml
-)
+file(GLOB TEST_YAML_FILES_1 RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/uap-core/tests" "${CMAKE_CURRENT_SOURCE_DIR}/uap-core/tests/*.yaml")
 
-add_custom_command(
-  OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_ua.data
-  COMMAND ${TCL_TCLSH} ${CMAKE_CURRENT_SOURCE_DIR}/tools/test_normalize.tcl test_ua >${CMAKE_CURRENT_SOURCE_DIR}/tests/test_ua.data
-  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/uap-core/tests/test_ua.yaml
-)
+foreach (TEST_YAML_FILE ${TEST_YAML_FILES_1})
+    string(REGEX REPLACE "[.]yaml$" ".data" TEST_DATA_FILE ${TEST_YAML_FILE})
+    list(APPEND TEST_DATA_FILES ${CMAKE_CURRENT_SOURCE_DIR}/tests/data/tests/${TEST_DATA_FILE})
+    add_custom_command(
+      OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/tests/data/tests/${TEST_DATA_FILE}
+      COMMAND ${TCL_TCLSH} ${CMAKE_CURRENT_SOURCE_DIR}/tools/test_normalize.tcl ${CMAKE_CURRENT_SOURCE_DIR}/uap-core/tests/${TEST_YAML_FILE} >${CMAKE_CURRENT_SOURCE_DIR}/tests/data/tests/${TEST_DATA_FILE}
+      DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/uap-core/tests/${TEST_YAML_FILE}
+    )
+endforeach()
+
+file(GLOB TEST_YAML_FILES_2 RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/uap-core/test_resources" "${CMAKE_CURRENT_SOURCE_DIR}/uap-core/test_resources/*.yaml")
+
+foreach (TEST_YAML_FILE ${TEST_YAML_FILES_2})
+    string(REGEX REPLACE "[.]yaml$" ".data" TEST_DATA_FILE ${TEST_YAML_FILE})
+    list(APPEND TEST_DATA_FILES ${CMAKE_CURRENT_SOURCE_DIR}/tests/data/test_resources/${TEST_DATA_FILE})
+    add_custom_command(
+      OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/tests/data/test_resources/${TEST_DATA_FILE}
+      COMMAND ${TCL_TCLSH} ${CMAKE_CURRENT_SOURCE_DIR}/tools/test_normalize.tcl ${CMAKE_CURRENT_SOURCE_DIR}/uap-core/test_resources/${TEST_YAML_FILE} >${CMAKE_CURRENT_SOURCE_DIR}/tests/data/test_resources/${TEST_DATA_FILE}
+      DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/uap-core/test_resources/${TEST_YAML_FILE}
+    )
+endforeach()
 
 add_library(tcluap SHARED
+    ${TEST_DATA_FILES}
     src/common.h
     src/common.c
     src/library.c
@@ -114,9 +123,9 @@ add_library(tcluap SHARED
     src/tcluapDevice.c
     src/tcluapDevice.h
     src/tcluapDevice_re.h
-    tests/test_device.data
-    tests/test_os.data
-    tests/test_ua.data
+    tests/data/tests/test_device.data
+    tests/data/tests/test_os.data
+    tests/data/tests/test_ua.data
 )
 
 set_target_properties(tcluap PROPERTIES POSITION_INDEPENDENT_CODE ON)

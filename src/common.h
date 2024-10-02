@@ -90,7 +90,7 @@ typedef int Tcl_Size;
 #define Tcl_InitObject(obj,s) if ((obj) == NULL) { (obj) = Tcl_NewStringObj((s), -1); Tcl_IncrRefCount((obj)); }
 
 #define uap_CreateKeyWithDefaultSubmatch(k,f,ph,c,sm) \
-    if ((re_info.nsubs >= (sm) && re_info.matches[(sm)].start != -1) || (f) != NULL) { \
+    if ((re_info.nsubs >= (sm) && re_info.matches[(sm)].start != re_info.matches[(sm)].end) || (f) != NULL) { \
         Tcl_Obj *field; \
         if ((f) != NULL) { \
             if ((ph) == NULL) { \

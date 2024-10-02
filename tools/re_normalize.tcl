@@ -45,14 +45,17 @@ proc fix_regexp { re ci } {
     }
 
     # in js regexp \b is a word boundary and \B is not a word boundary
-    # in Tcl corresponding constraints are \m and \Y
-    set re [string map [list "\\b" "\\m"] $re]
+    # in Tcl corresponding constraints are \y and \Y
+    set re [string map [list "\\b" "\\y"] $re]
 
-    # If regexp starts with "^.{0,200}?" then whole regexp will be non-greedy.
-    # Let's try to avoid this by replacing it with "^(?:.{0,200})?"
-    if { [string first {^.{0,200}?} $re] == 0 } {
-        set re [string replace $re 0 9 {^(?:.{0,200})?}]
-    }
+    # Some regexps start with "^.{0,200}?"
+    # This seems to be a hack to limit the search to the first 200 characters
+    # and avoid high CPU utilization when dealing with very long strings.
+    # However, this doesn't work very well in Tcl's regexp because it disables
+    # greed mode for whole regexp and there is no way to turn it back on.
+    # As a workaround, we will strip this from regexp, but we limit string
+    # by 300 characters in uap_ParseCmd() function in library.c.
+    set re [string map [list {^.{0,200}?} {}] $re]
 
     if { $ci } {
         set re "(?i)$re"

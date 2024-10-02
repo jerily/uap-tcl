@@ -7,15 +7,50 @@ namespace import -force ::tcltest::test
 
 source [file join [file dirname [info script]] common.tcl]
 
-set fp [open [file join [file dirname [info script]] test_ua.data] r]
-set data [split [read $fp] \n]
-close $fp
+set patch_tests {
 
-foreach rec $data {
+    {This test does not fail in uap-core because it does not compare patch_minor for UA, but we do}
+    {Mozilla/5.0 (Linux; Android 11; vivo 1904; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/87.0.4280.141 Mobile Safari/537.36 VivoBrowser/11.1.0.1}
+    {family VivoBrowser major 11 minor 1 patch 0 patch_minor 1}
 
-    lassign $rec source result
-    test uapUA-[incr counter] $source -body {
-        lsort -stride 2 -index 0 [::uap::parse $source ua]
-    } -result [lsort -stride 2 -index 0 $result]
+    {This test does not fail in uap-core because it does not compare patch_minor for UA, but we do}
+    {Mozilla/5.0 (Linux; U; Android 13; zh-cn; Infinix X6833B Build/SP1A.210812.016) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/103.0.5060.129 HiBrowser/v2.10.1.2 UWS/ Mobile Safari/537.36}
+    {family HiBrowser major 2 minor 10 patch 1 patch_minor 2}
+
+    {This test has expected string as "Zao", but out result is "Zao-Crawler". It seems that our result is more correct when Tcl picks up the longest match.}
+    {Zao-Crawler}
+    {family Zao-Crawler}
+
+}
+
+foreach fn {
+    tests/test_ua.data
+    test_resources/firefox_user_agent_strings.data
+    test_resources/pgts_browser_list.data
+    test_resources/opera_mini_user_agent_strings.data
+    test_resources/podcasting_user_agent_strings.data
+} {
+
+    set fp [open [file join [file dirname [info script]] data $fn] r]
+    set data [split [string trim [read $fp]] \n]
+    close $fp
+
+    unset -nocomplain counter
+
+    foreach rec $data {
+
+        lassign $rec source result
+
+        foreach { _ patch_source patch_result } $patch_tests {
+            if { $source eq $patch_source } {
+                set result $patch_result
+            }
+        }
+
+        test uapUA-[file rootname [file tail $fn]]-[incr counter] $source -body {
+            lsort -stride 2 -index 0 [::uap::parse $source ua]
+        } -result [lsort -stride 2 -index 0 $result]
+
+    }
 
 }

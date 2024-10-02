@@ -6,7 +6,7 @@ lappend auto_path [file join [file dirname [info script]] tcllib]
 
 package require yaml
 
-set data [::yaml::yaml2dict -file [file join [file dirname [info script]] .. uap-core tests [lindex $argv 0].yaml]]
+set data [::yaml::yaml2dict -file [lindex $argv 0]]
 
 foreach rec [dict get $data "test_cases"] {
     set result [list]

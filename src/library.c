@@ -44,17 +44,26 @@ static int uap_ParseCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl
 
     Tcl_Obj *ua, *os, *device;
 
+    // Here we limit input string with 500 characters. This is to avoid excessive
+    // CPU usage when dealing with long strings. Some regexps in uap-core contain
+    // special fuses for this as "^.{0,200}?" at the beginning start of regexp.
+    // However, we strip it in re_normalize.tcl because in Tcl this makes whole
+    // regexp as non-greedy.
+    Tcl_Obj *data = Tcl_GetRange(objv[1], 0, 499);
+    Tcl_IncrRefCount(data);
+
     if (want_type == typeAll || want_type == typeUA) {
-        ua = uap_UserAgentParse(objv[1]);
+        ua = uap_UserAgentParse(data);
     }
 
     if (want_type == typeAll || want_type == typeOS) {
-        os = uap_OSParse(objv[1]);
+        os = uap_OSParse(data);
     }
 
     if (want_type == typeAll || want_type == typeDevice) {
-        device = uap_DeviceParse(objv[1]);
+        device = uap_DeviceParse(data);
     }
+    Tcl_DecrRefCount(data);
 
     switch (want_type) {
     case typeUA:
