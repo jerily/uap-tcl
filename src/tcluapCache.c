@@ -51,6 +51,7 @@ void uap_CacheFree(uap_CacheType *c) {
     }
 
     Tcl_DeleteHashTable(c->hash_table);
+    ckfree(c->hash_table);
     ckfree(c);
     DBG2(printf("cache freed: %p", (void *)c));
 
@@ -67,6 +68,7 @@ Tcl_Obj *uap_CacheGet(uap_CacheType *c, Tcl_Obj *key) {
     }
 
     uap_CacheEntryType *ce = (uap_CacheEntryType *)Tcl_GetHashValue(hash_entry);
+
     DBG2(printf("return: EXISTS"));
     return ce->value;
 

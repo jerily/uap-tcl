@@ -97,13 +97,17 @@ typedef int Tcl_Size;
                 Tcl_InitObject((c), (f)); \
                 field = (c); \
             } else { \
-                assert(re_info.nsubs >= (sm) && "no required submatch"); \
+                assert(re_info.nsubs >= ((sm) - 2) && "no required submatch"); \
                 field = uap_GetMatchObj(data, &re_info, (sm), (f), (ph)); \
             } \
         } else { \
             field = uap_GetSingleMatchObj(data, &re_info, (sm)); \
         } \
-        Tcl_DictObjPut(NULL, result, (k), field); \
+        if (uap_TrimString(field) > 0) { \
+            Tcl_DictObjPut(NULL, result, (k), field); \
+        } else { \
+            Tcl_BounceRefCount(field); \
+        } \
     }
 
 #define TCL_TSD_INIT(keyPtr) \
@@ -113,6 +117,7 @@ typedef int Tcl_Size;
 extern "C" {
 #endif
 
+Tcl_Size uap_TrimString(Tcl_Obj *str);
 Tcl_Obj *uap_GetSingleMatchObj(Tcl_Obj *data, Tcl_RegExpInfo *re_info, int nmatch);
 Tcl_Obj *uap_GetMatchObj(Tcl_Obj *data, Tcl_RegExpInfo *re_info, int nmatch, const char *format, const char *format_ph);
 

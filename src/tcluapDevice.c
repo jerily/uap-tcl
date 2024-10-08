@@ -108,9 +108,11 @@ Tcl_Obj *uap_DeviceParse(Tcl_Obj *data) {
         re_db[i].family, re_db[i].family_ph,
         tsdPtr->cache[i].family, 1);
 
-    uap_CreateKeyWithDefaultSubmatch(tsdPtr->key_brand,
-        re_db[i].brand, re_db[i].brand_ph,
-        tsdPtr->cache[i].brand, 1);
+    if (re_db[i].brand != NULL) {
+        uap_CreateKeyWithDefaultSubmatch(tsdPtr->key_brand,
+            re_db[i].brand, re_db[i].brand_ph,
+            tsdPtr->cache[i].brand, 1);
+    }
 
     uap_CreateKeyWithDefaultSubmatch(tsdPtr->key_model,
         re_db[i].model, re_db[i].model_ph,

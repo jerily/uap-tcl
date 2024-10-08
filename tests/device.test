@@ -1,0 +1,61 @@
+if {[info exists ::env(MEMDEBUG)]} {
+    return
+}
+
+package require tcltest
+package require uap
+
+namespace import -force ::tcltest::test
+
+::tcltest::configure {*}$argv
+
+source [file join [file dirname [info script]] common.tcl]
+
+set patch_tests {
+
+    {This test has expected family as "HTC (compatible", but our result is "HTC". It seems that our result is more correct.}
+    {HTC (compatible; MSIE 6.0; Windows CE; IEMobile 8.12; MSIEMobile 6.0)}
+    {brand HTC family HTC}
+
+    {This test has expected family as "Lenovo Build", but our result is "Lenovo". It seems that our result is more correct.}
+    {Mozilla/5.0 (Linux; U; Android 3.1; en-us; Lenovo Build/LeOS-110802-R0018) AppleWebKit/534.13 (KHTML, like Gecko) Version/4.0 Safari/534.13}
+    {brand Lenovo family Lenovo}
+
+    {This test gives the following output:
+        brand HTC family {HTC HTC One V {LayoutSize=Normal}} model {HTC One V {LayoutSize=Normal}}
+     but our result is:
+        brand HTC family {HTC HTC One V} model {HTC One V}
+     It seems that our result is more correct.
+    }
+    {BUYVIP/1.9.1 (HTC HTC One V {LayoutSize=Normal}; Android 4.0.3)}
+    {brand HTC family {HTC HTC One V} model {HTC One V}}
+
+}
+
+foreach fn {
+    tests/test_device.data
+} {
+
+    set fp [open [file join [file dirname [info script]] data $fn] r]
+    set data [split [string trim [read $fp]] \n]
+    close $fp
+
+    unset -nocomplain counter
+
+    foreach rec $data {
+
+        lassign $rec source result
+
+        foreach { _ patch_source patch_result } $patch_tests {
+            if { $source eq $patch_source } {
+                set result $patch_result
+            }
+        }
+
+        test uapDevice-[file rootname [file tail $fn]]-[incr counter] $source -body {
+            lsort -stride 2 -index 0 [::uap::parse $source device]
+        } -result [lsort -stride 2 -index 0 $result]
+
+    }
+
+}

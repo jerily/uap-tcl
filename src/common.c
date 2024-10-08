@@ -5,6 +5,56 @@
  */
 
 #include "common.h"
+#include <ctype.h>
+
+Tcl_Size uap_TrimString(Tcl_Obj *str) {
+
+    Tcl_Size length;
+    const char *buffer = Tcl_GetStringFromObj(str, &length);
+
+    if (length <= 0) {
+        goto done;
+    }
+
+    // 1st stage, try to trim the string from left
+    Tcl_Size trim_count = 0;
+    while (isspace(buffer[trim_count])) {
+        trim_count++;
+    }
+
+    if (trim_count > 0) {
+
+        length -= trim_count;
+
+        if (length <= 0) {
+            Tcl_SetObjLength(str, 0);
+            goto done;
+        }
+
+        char *new_buffer = ckalloc(length);
+        memcpy(new_buffer, &buffer[trim_count], length);
+        Tcl_SetStringObj(str, new_buffer, length);
+        buffer = Tcl_GetStringFromObj(str, NULL);
+        ckfree(new_buffer);
+
+        trim_count = 0;
+
+    }
+
+    while (trim_count != length && isspace(buffer[length - trim_count - 1])) {
+        trim_count++;
+    }
+
+    if (trim_count > 0) {
+        length -= trim_count;
+        Tcl_SetObjLength(str, length);
+    }
+
+done:
+
+    return length;
+
+}
 
 Tcl_Obj *uap_GetSingleMatchObj(Tcl_Obj *data, Tcl_RegExpInfo *re_info, int nmatch) {
 

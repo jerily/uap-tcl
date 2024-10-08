@@ -1,3 +1,7 @@
+if {[info exists ::env(MEMDEBUG)]} {
+    return
+}
+
 package require tcltest
 package require uap
 
