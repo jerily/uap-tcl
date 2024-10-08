@@ -64,22 +64,26 @@ add_custom_target(shell ${CMAKE_COMMAND} -E env TCLLIBPATH=${CMAKE_CURRENT_BINAR
     USES_TERMINAL
     DEPENDS ${TARGET})
 
+# The DEPENDS property is commented out for auto-generated files to avoid updating
+# them based on the source files, since the source files belong to the submodule and
+# the timestamps for those files will be updated on every checkout.
+
 add_custom_command(
   OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/src/tcluapUserAgent_re.h
   COMMAND ${TCL_TCLSH} ${CMAKE_CURRENT_SOURCE_DIR}/tools/re_normalize.tcl user_agent_parsers >${CMAKE_CURRENT_SOURCE_DIR}/src/tcluapUserAgent_re.h
-  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/uap-core/regexes.yaml
+#  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/uap-core/regexes.yaml
 )
 
 add_custom_command(
   OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/src/tcluapOS_re.h
   COMMAND ${TCL_TCLSH} ${CMAKE_CURRENT_SOURCE_DIR}/tools/re_normalize.tcl os_parsers >${CMAKE_CURRENT_SOURCE_DIR}/src/tcluapOS_re.h
-  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/uap-core/regexes.yaml
+#  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/uap-core/regexes.yaml
 )
 
 add_custom_command(
   OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/src/tcluapDevice_re.h
   COMMAND ${TCL_TCLSH} ${CMAKE_CURRENT_SOURCE_DIR}/tools/re_normalize.tcl device_parsers >${CMAKE_CURRENT_SOURCE_DIR}/src/tcluapDevice_re.h
-  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/uap-core/regexes.yaml
+#  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/uap-core/regexes.yaml
 )
 
 set(TEST_DATA_FILES)
@@ -92,7 +96,7 @@ foreach (TEST_YAML_FILE ${TEST_YAML_FILES_1})
     add_custom_command(
       OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/tests/data/tests/${TEST_DATA_FILE}
       COMMAND ${TCL_TCLSH} ${CMAKE_CURRENT_SOURCE_DIR}/tools/test_normalize.tcl ${CMAKE_CURRENT_SOURCE_DIR}/uap-core/tests/${TEST_YAML_FILE} >${CMAKE_CURRENT_SOURCE_DIR}/tests/data/tests/${TEST_DATA_FILE}
-      DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/uap-core/tests/${TEST_YAML_FILE}
+#      DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/uap-core/tests/${TEST_YAML_FILE}
     )
 endforeach()
 
@@ -104,7 +108,7 @@ foreach (TEST_YAML_FILE ${TEST_YAML_FILES_2})
     add_custom_command(
       OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/tests/data/test_resources/${TEST_DATA_FILE}
       COMMAND ${TCL_TCLSH} ${CMAKE_CURRENT_SOURCE_DIR}/tools/test_normalize.tcl ${CMAKE_CURRENT_SOURCE_DIR}/uap-core/test_resources/${TEST_YAML_FILE} >${CMAKE_CURRENT_SOURCE_DIR}/tests/data/test_resources/${TEST_DATA_FILE}
-      DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/uap-core/test_resources/${TEST_YAML_FILE}
+#      DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/uap-core/test_resources/${TEST_YAML_FILE}
     )
 endforeach()
 
