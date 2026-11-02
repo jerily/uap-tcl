@@ -1,0 +1,94 @@
+# Copyright Jerily LTD. All Rights Reserved.
+# SPDX-FileCopyrightText: 2024 Neofytos Dimitriou (neo@jerily.cy)
+# SPDX-License-Identifier: MIT.
+
+package require tcltest
+namespace import -force ::tcltest::test
+
+package require uap
+
+source [file join [file dirname [info script]] common.tcl]
+
+test uapBasic-1.1 {Test base syntax, no parameters} -body {
+    uap::parse
+} -returnCodes error -result {wrong # args: should be "uap::parse user_agent_string ?type?"}
+
+test uapBasic-1.2 {Test base syntax, too many parameters} -body {
+    uap::parse 1 2 3
+} -returnCodes error -result {wrong # args: should be "uap::parse user_agent_string ?type?"}
+
+test uapBasic-1.3 {Test base syntax, wrong 2nd parameter} -body {
+    uap::parse 1 2
+} -returnCodes error -result {bad type "2": must be ua, os, or device}
+
+test uapBasic-1.4 {Test base syntax, init with too many parameters} -body {
+    uap::init 1
+} -returnCodes error -result {wrong # args: should be "uap::init"}
+
+test uapBasic-2.1 {Test unknown result without 2nd parameter} -body {
+    uap::parse 1
+} -cleanup {
+    catch { uap::reset_cache }
+} -result {ua {family Other} os {family Other} device {family Other} string 1}
+
+test uapBasic-2.2 {Test unknown result with 'ua'} -body {
+    uap::parse 1 ua
+} -cleanup {
+    catch { uap::reset_cache }
+} -result {family Other}
+
+test uapBasic-2.3 {Test unknown result with 'os'} -body {
+    uap::parse 1 ua
+} -cleanup {
+    catch { uap::reset_cache }
+} -result {family Other}
+
+test uapBasic-2.4 {Test unknown result with 'device'} -body {
+    uap::parse 1 ua
+} -cleanup {
+    catch { uap::reset_cache }
+} -result {family Other}
+
+test uapBasic-3.1 {Test known result without 2nd parameter} -body {
+    uap::parse {Mozilla/5.0 (Linux; Android 11; SM-A225M) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/85.0.4183.127 Mobile Safari/537.36 Instabridge/22}
+} -cleanup {
+    catch { uap::reset_cache }
+} -result {ua {family Instabridge major 22} os {family Android major 11} device {family {Samsung SM-A225M} brand Samsung model SM-A225M} string {Mozilla/5.0 (Linux; Android 11; SM-A225M) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/85.0.4183.127 Mobile Safari/537.36 Instabridge/22}}
+
+test uapBasic-3.2 {Test known result with 'ua'} -body {
+    uap::parse {Mozilla/5.0 (Linux; Android 11; SM-A225M) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/85.0.4183.127 Mobile Safari/537.36 Instabridge/22} ua
+} -cleanup {
+    catch { uap::reset_cache }
+} -result {family Instabridge major 22}
+
+test uapBasic-3.3 {Test known result with 'os'} -body {
+    uap::parse {Mozilla/5.0 (Linux; Android 11; SM-A225M) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/85.0.4183.127 Mobile Safari/537.36 Instabridge/22} os
+} -cleanup {
+    catch { uap::reset_cache }
+} -result {family Android major 11}
+
+test uapBasic-3.4 {Test known result with 'device'} -body {
+    uap::parse {Mozilla/5.0 (Linux; Android 11; SM-A225M) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/85.0.4183.127 Mobile Safari/537.36 Instabridge/22} device
+} -cleanup {
+    catch { uap::reset_cache }
+} -result {family {Samsung SM-A225M} brand Samsung model SM-A225M}
+
+test uapBasic-4.1 {Test init} -body {
+    uap::init
+} -cleanup {
+    catch { uap::reset_cache }
+} -result {}
+
+# This test must be without uap::reset_cache in the cleanup section to make sure
+# that memory released during thread termination.
+test uapBasic-5.1 {Test memory free in thread} -constraints threaded -setup {
+    set tid [thread::create thread::wait]
+} -body {
+    thread::send $tid {
+        package require uap
+        uap::parse {Mozilla/5.0 (Linux; Android 11; SM-A225M) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/85.0.4183.127 Mobile Safari/537.36 Instabridge/22}
+    }
+} -cleanup {
+    thread::release $tid
+    unset tid
+} -result {ua {family Instabridge major 22} os {family Android major 11} device {family {Samsung SM-A225M} brand Samsung model SM-A225M} string {Mozilla/5.0 (Linux; Android 11; SM-A225M) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/85.0.4183.127 Mobile Safari/537.36 Instabridge/22}}
