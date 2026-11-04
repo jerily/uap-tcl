@@ -35,7 +35,7 @@ foreach fn {
     test_resources/podcasting_user_agent_strings.data
 } {
 
-    set fp [open [file join [file dirname [info script]] data $fn] r]
+    set fp [open [file join $uap_test_data_dir $fn] r]
     set data [split [string trim [read $fp]] \n]
     close $fp
 
@@ -52,7 +52,12 @@ foreach fn {
         }
 
         test uapUA-[file rootname [file tail $fn]]-[incr counter] $source -body {
-            lsort -stride 2 -index 0 [::uap::parse $source ua]
+            set actual [::uap::parse $source ua]
+            # Upstream UA fixtures specify three version components. Compare the
+            # fourth only when a fixture explicitly supplies it; basic.test also
+            # covers our documented patch_minor extension.
+            if {![dict exists $result patch_minor]} {dict unset actual patch_minor}
+            lsort -stride 2 -index 0 $actual
         } -result [lsort -stride 2 -index 0 $result]
 
     }

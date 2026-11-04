@@ -6,7 +6,9 @@ lappend auto_path [file join [file dirname [info script]] tcllib]
 
 package require yaml
 
-set data [::yaml::yaml2dict -file [file join [file dirname [info script]] .. uap-core regexes.yaml]]
+set input [file join [file dirname [info script]] .. uap-core regexes.yaml]
+if {[llength $argv] == 2} {set input [lindex $argv 1]}
+set data [::yaml::yaml2dict -file $input]
 
 set patch_regexp {
 
@@ -37,8 +39,8 @@ set patch_regexp {
         the 1st quantifier '{0,2}' to non-greedy version to make whole
         regexp non-greedy.
     }
-    {(?i); {0,2}(ADR6200|ADR6400L|ADR6425LVW|Amaze|DesireS?|EndeavorU|Eris|EVO|Evo\d[A-Z]+|HD2|IncredibleS?|Inspire[A-Z0-9]*|Inspire[A-Z0-9]*|Sensation[A-Z0-9]*|Wildfire)[ _-](.{1,200}?)(?:[/;\)]|Build|MIUI|1\.0)}
-    {(?i); {0,2}?(ADR6200|ADR6400L|ADR6425LVW|Amaze|DesireS?|EndeavorU|Eris|EVO|Evo\d[A-Z]+|HD2|IncredibleS?|Inspire[A-Z0-9]*|Inspire[A-Z0-9]*|Sensation[A-Z0-9]*|Wildfire)[ _-](.{1,200}?)(?:[/;\)]|Build|MIUI|1\.0)}
+    {(?i); {0,2}(ADR6200|ADR6400L|ADR6425LVW|Amaze|DesireS?|EndeavorU|Eris|EVO|Evo\d[A-Z]+|HD2|IncredibleS?|Inspire[A-Z0-9]*|Sensation[A-Z0-9]*|Wildfire)[ _-](.{1,200}?)(?:[/;\)]|Build|MIUI|1\.0)}
+    {(?i); {0,2}?(ADR6200|ADR6400L|ADR6425LVW|Amaze|DesireS?|EndeavorU|Eris|EVO|Evo\d[A-Z]+|HD2|IncredibleS?|Inspire[A-Z0-9]*|Sensation[A-Z0-9]*|Wildfire)[ _-](.{1,200}?)(?:[/;\)]|Build|MIUI|1\.0)}
 
     {
         Tcl can not mix greedy and non-greedy quantifiers. Here we patch
@@ -299,7 +301,10 @@ foreach rec [dict get $data [lindex $argv 0]] {
     incr count
     set opts [list]
     set ci [expr { [dict exists $rec "regex_flag"] && [string first "i" [dict get $rec "regex_flag"]] != -1 }]
-    lappend opts [quote [fix_regexp [dict get $rec "regex"] $ci]]
+    set regex [fix_regexp [dict get $rec "regex"] $ci]
+    # Reject unsupported syntax during generation, before it reaches the C parser.
+    regexp -about $regex
+    lappend opts [quote $regex]
     foreach key [dict get $known_keys [lindex $argv 0]] {
         if { [dict exists $rec $key] } {
             set val [dict get $rec $key]

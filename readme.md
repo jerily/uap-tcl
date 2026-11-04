@@ -9,6 +9,9 @@ Supported systems:
 - Linux
 - MacOS
 
+Build with Tcl 8.6 or 9.x headers for the runtime Tcl major version. Shared
+libraries link the Tcl stub archive; static builds use the embedding runtime.
+
 ## Installation
 
 ```bash
@@ -16,13 +19,35 @@ git clone https://github.com/jerily/uap-tcl.git --recurse-submodules
 cd uap-tcl
 mkdir build
 cd build
-cmake ..
+cmake .. -DCMAKE_BUILD_TYPE=Release
 # or if TCL is not in the default path (/usr/local/lib):
 # change "TCL_LIBRARY_DIR" and "TCL_INCLUDE_DIR" to the correct paths
 # cmake .. -DTCL_LIBRARY_DIR=/usr/local/lib -DTCL_INCLUDE_DIR=/usr/local/include
 make
+ctest --output-on-failure
 make install
 ```
+
+## Parser data and builds
+
+Version 1.1.0 includes uap-core revision
+[`73e7340`](https://github.com/ua-parser/uap-core/commit/73e7340c3ed8055051607b296bf46ead7aa5f19e)
+(2026-08-24). Generated tables and test fixtures are included, so source archives
+build without downloading submodules. To regenerate from a checkout or installed
+data package, configure with `-DUAP_CORE_DIR=/path/to/uap-core`. CMake generates
+files in the build directory and rebuilds them when the YAML or generator changes.
+
+Set `TCL_INCLUDE_PATH`, `TCL_STUB_LIBRARY`, and `TCL_TCLSH` to choose a Tcl
+installation. `-DBUILD_TESTING=OFF` disables tests; regeneration still needs Tcl.
+`-DBUILD_SHARED_LIBS=OFF` installs `libtcluap.a` without a package index.
+An embedding application links that archive and Tcl, registers `Tcluap_Init`
+as `Tcluap` with `Tcl_StaticLibrary` (Tcl 9) or `Tcl_StaticPackage` (Tcl 8.6),
+and loads it with `load {} Tcluap`.
+
+The registry's `uap-core` package installs YAML under `share/uap-core`;
+the `uap-tcl` recipe regenerates tables from that pinned data. With a shared
+installation, run `ttrek run -package uap-tcl -script demo` for browser, OS,
+and device parsing examples.
 
 ## Usage
 

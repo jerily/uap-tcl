@@ -1,150 +1,132 @@
 cmake_minimum_required(VERSION 3.22.1)
-project(uap-tcl VERSION 1.0.0 LANGUAGES C)
+project(uap-tcl VERSION 1.1.0 LANGUAGES C)
 
-set(TARGET tcluap)
-set(CMAKE_C_STANDARD   11)
-set(CMAKE_C_STANDARD_REQUIRED true)
-set(THREADS_PREFER_PTHREAD_FLAG ON)
-
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
 if(WIN32)
-    # Prefix all shared libraries with 'lib'.
     set(CMAKE_SHARED_LIBRARY_PREFIX "lib")
-    # Prefix all static libraries with 'lib'.
     set(CMAKE_STATIC_LIBRARY_PREFIX "lib")
 endif()
-
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+option(BUILD_SHARED_LIBS "Build shared libraries" ON)
+option(ADDRESS_SANITIZER "Enable address and undefined behavior sanitizers" OFF)
+set(UAP_CORE_DIR "" CACHE PATH "Regenerate tables and test data from this uap-core directory")
+find_package(TclStub 8.6 REQUIRED)
+include(CTest)
 
-find_package(TCL 8.6.13 REQUIRED)  # TCL_INCLUDE_PATH TCL_LIBRARY
-find_program(TCL_TCLSH
-  NAMES
-      tclsh86 tclsh8.6
-      tclsh90 tclsh9.0
-      tclsh
-  PATHS
-      ${TCL_INCLUDE_PATH}/../bin
-      ${TCL_INCLUDE_PATH}/../../bin
-  NO_DEFAULT_PATH
-)
-
-message(STATUS "TCL_INCLUDE_PATH: ${TCL_INCLUDE_PATH}")
-message(STATUS "TCL_LIBRARY: ${TCL_LIBRARY}")
-message(STATUS "TCL_TCLSH: ${TCL_TCLSH}")
-
-add_compile_options(-Wall -Wextra -Wpedantic)
-add_compile_definitions(TCL_THREADS VERSION=${PROJECT_VERSION})
-
-if ("${ADDRESS_SANITIZER}" STREQUAL "ON")
-    add_compile_options(-fPIC -g -fsanitize=undefined -fsanitize=address)
-    add_link_options(-fsanitize=undefined -fsanitize=address)
-    add_compile_definitions(TCL_MEM_DEBUG=1)
+set(UAP_GENERATED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
+set(UAP_TEST_DATA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/tests/data")
+if(UAP_CORE_DIR)
+    if(NOT TCL_TCLSH OR NOT EXISTS "${UAP_CORE_DIR}/regexes.yaml")
+        message(FATAL_ERROR "Regeneration requires TCL_TCLSH and UAP_CORE_DIR/regexes.yaml")
+    endif()
+    set(UAP_GENERATED_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated")
+    set(UAP_TEST_DATA_DIR "${CMAKE_CURRENT_BINARY_DIR}/test-data")
+    file(MAKE_DIRECTORY "${UAP_GENERATED_DIR}")
+    set(generated_files)
+    foreach(kind UserAgent OS Device)
+        if(kind STREQUAL "UserAgent")
+            set(section user_agent_parsers)
+        elseif(kind STREQUAL "OS")
+            set(section os_parsers)
+        else()
+            set(section device_parsers)
+        endif()
+        set(output "${UAP_GENERATED_DIR}/tcluap${kind}_re.h")
+        add_custom_command(OUTPUT "${output}"
+            COMMAND ${CMAKE_COMMAND} "-DTCL_TCLSH=${TCL_TCLSH}"
+                "-DSCRIPT=${CMAKE_CURRENT_SOURCE_DIR}/tools/re_normalize.tcl"
+                "-DSECTION=${section}" "-DINPUT=${UAP_CORE_DIR}/regexes.yaml" "-DOUTPUT=${output}"
+                -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/GenerateData.cmake"
+            DEPENDS "${UAP_CORE_DIR}/regexes.yaml" tools/re_normalize.tcl cmake/GenerateData.cmake
+            VERBATIM)
+        list(APPEND generated_files "${output}")
+    endforeach()
+    if(BUILD_TESTING)
+        foreach(group tests test_resources)
+            file(MAKE_DIRECTORY "${UAP_TEST_DATA_DIR}/${group}")
+            file(GLOB yaml_files CONFIGURE_DEPENDS "${UAP_CORE_DIR}/${group}/*.yaml")
+            foreach(input ${yaml_files})
+                get_filename_component(name "${input}" NAME_WE)
+                set(output "${UAP_TEST_DATA_DIR}/${group}/${name}.data")
+                add_custom_command(OUTPUT "${output}"
+                    COMMAND ${CMAKE_COMMAND} "-DTCL_TCLSH=${TCL_TCLSH}"
+                        "-DSCRIPT=${CMAKE_CURRENT_SOURCE_DIR}/tools/test_normalize.tcl"
+                        "-DINPUT=${input}" "-DOUTPUT=${output}"
+                        -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/GenerateData.cmake"
+                    DEPENDS "${input}" tools/test_normalize.tcl cmake/GenerateData.cmake
+                    VERBATIM)
+                list(APPEND generated_files "${output}")
+            endforeach()
+        endforeach()
+    endif()
+    add_custom_target(uap_data DEPENDS ${generated_files})
 endif()
 
-if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-    add_compile_definitions(TCL_MEM_DEBUG=1)
-    set(CMAKE_C_FLAGS "-g ${CMAKE_C_FLAGS}")
-else()
-    # NDEBUG to not generate code for assert
-    add_compile_definitions(NDEBUG)
-endif ()
-
-#set(CMAKE_VERBOSE_MAKEFILE ON)
-
-#set(CMAKE_CTEST_ARGUMENTS "--verbose")
-set(CMAKE_CTEST_ARGUMENTS "--verbose" "--output-on-failure")
-enable_testing()
-add_test(NAME AllUnitTests
-    COMMAND ${TCL_TCLSH} ${CMAKE_CURRENT_SOURCE_DIR}/tests/all.tcl -verbose "body error start"
-)
-set_tests_properties(AllUnitTests
-    PROPERTIES ENVIRONMENT TCLLIBPATH=${CMAKE_CURRENT_BINARY_DIR}
-)
-
-add_custom_target(shell ${CMAKE_COMMAND} -E env TCLLIBPATH=${CMAKE_CURRENT_BINARY_DIR} ${TCL_TCLSH}
-    USES_TERMINAL
-    DEPENDS ${TARGET})
-
-# The DEPENDS property is commented out for auto-generated files to avoid updating
-# them based on the source files, since the source files belong to the submodule and
-# the timestamps for those files will be updated on every checkout.
-
-add_custom_command(
-  OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/src/tcluapUserAgent_re.h
-  COMMAND ${TCL_TCLSH} ${CMAKE_CURRENT_SOURCE_DIR}/tools/re_normalize.tcl user_agent_parsers >${CMAKE_CURRENT_SOURCE_DIR}/src/tcluapUserAgent_re.h
-#  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/uap-core/regexes.yaml
-)
-
-add_custom_command(
-  OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/src/tcluapOS_re.h
-  COMMAND ${TCL_TCLSH} ${CMAKE_CURRENT_SOURCE_DIR}/tools/re_normalize.tcl os_parsers >${CMAKE_CURRENT_SOURCE_DIR}/src/tcluapOS_re.h
-#  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/uap-core/regexes.yaml
-)
-
-add_custom_command(
-  OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/src/tcluapDevice_re.h
-  COMMAND ${TCL_TCLSH} ${CMAKE_CURRENT_SOURCE_DIR}/tools/re_normalize.tcl device_parsers >${CMAKE_CURRENT_SOURCE_DIR}/src/tcluapDevice_re.h
-#  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/uap-core/regexes.yaml
-)
-
-set(TEST_DATA_FILES)
-
-file(GLOB TEST_YAML_FILES_1 RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/uap-core/tests" "${CMAKE_CURRENT_SOURCE_DIR}/uap-core/tests/*.yaml")
-
-foreach (TEST_YAML_FILE ${TEST_YAML_FILES_1})
-    string(REGEX REPLACE "[.]yaml$" ".data" TEST_DATA_FILE ${TEST_YAML_FILE})
-    list(APPEND TEST_DATA_FILES ${CMAKE_CURRENT_SOURCE_DIR}/tests/data/tests/${TEST_DATA_FILE})
-    add_custom_command(
-      OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/tests/data/tests/${TEST_DATA_FILE}
-      COMMAND ${TCL_TCLSH} ${CMAKE_CURRENT_SOURCE_DIR}/tools/test_normalize.tcl ${CMAKE_CURRENT_SOURCE_DIR}/uap-core/tests/${TEST_YAML_FILE} >${CMAKE_CURRENT_SOURCE_DIR}/tests/data/tests/${TEST_DATA_FILE}
-#      DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/uap-core/tests/${TEST_YAML_FILE}
-    )
-endforeach()
-
-file(GLOB TEST_YAML_FILES_2 RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/uap-core/test_resources" "${CMAKE_CURRENT_SOURCE_DIR}/uap-core/test_resources/*.yaml")
-
-foreach (TEST_YAML_FILE ${TEST_YAML_FILES_2})
-    string(REGEX REPLACE "[.]yaml$" ".data" TEST_DATA_FILE ${TEST_YAML_FILE})
-    list(APPEND TEST_DATA_FILES ${CMAKE_CURRENT_SOURCE_DIR}/tests/data/test_resources/${TEST_DATA_FILE})
-    add_custom_command(
-      OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/tests/data/test_resources/${TEST_DATA_FILE}
-      COMMAND ${TCL_TCLSH} ${CMAKE_CURRENT_SOURCE_DIR}/tools/test_normalize.tcl ${CMAKE_CURRENT_SOURCE_DIR}/uap-core/test_resources/${TEST_YAML_FILE} >${CMAKE_CURRENT_SOURCE_DIR}/tests/data/test_resources/${TEST_DATA_FILE}
-#      DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/uap-core/test_resources/${TEST_YAML_FILE}
-    )
-endforeach()
-
-add_library(tcluap SHARED
-    ${TEST_DATA_FILES}
-    src/common.h
-    src/common.c
-    src/library.c
-    src/library.h
-    src/tcluapUserAgent.c
-    src/tcluapUserAgent.h
-    src/tcluapUserAgent_re.h
-    src/tcluapOS.c
-    src/tcluapOS.h
-    src/tcluapOS_re.h
-    src/tcluapDevice.c
-    src/tcluapDevice.h
-    src/tcluapDevice_re.h
-    src/tcluapCache.c
-    src/tcluapCache.h
-)
-
+add_library(tcluap src/common.c src/library.c src/tcluapUserAgent.c
+    src/tcluapOS.c src/tcluapDevice.c src/tcluapCache.c)
 set_target_properties(tcluap PROPERTIES POSITION_INDEPENDENT_CODE ON)
+target_include_directories(tcluap PRIVATE "${UAP_GENERATED_DIR}" ${TCL_INCLUDE_PATH})
+target_compile_definitions(tcluap PRIVATE TCL_THREADS VERSION=${PROJECT_VERSION})
+if(TARGET uap_data)
+    add_dependencies(tcluap uap_data)
+endif()
+if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(tcluap PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+if(ADDRESS_SANITIZER)
+    target_compile_options(tcluap PRIVATE -g -fsanitize=undefined,address)
+    target_link_options(tcluap PRIVATE -fsanitize=undefined,address)
+endif()
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_compile_definitions(tcluap PRIVATE TCL_MEM_DEBUG=1)
+endif()
 
-include_directories(${TCL_INCLUDE_PATH})
-target_link_libraries(tcluap PRIVATE ${TCL_LIBRARY})
-get_filename_component(TCL_LIBRARY_PATH "${TCL_LIBRARY}" PATH)
+if(BUILD_SHARED_LIBS)
+    target_compile_definitions(tcluap PRIVATE USE_TCL_STUBS)
+    target_link_libraries(tcluap PRIVATE ${TCL_STUB_LIBRARY})
+    if(TCL_TCLSH)
+        add_custom_target(shell COMMAND ${CMAKE_COMMAND} -E env
+            "TCLLIBPATH={${CMAKE_CURRENT_BINARY_DIR}}" ${TCL_TCLSH}
+            USES_TERMINAL DEPENDS tcluap)
+    endif()
+    configure_file(pkgIndex.tcl.in pkgIndex.tcl @ONLY)
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/pkgIndex.tcl" DESTINATION lib/tcluap${PROJECT_VERSION})
+else()
+    # The embedding application links Tcl and registers Tcluap_Init.
+    target_compile_definitions(tcluap PRIVATE STATIC_BUILD)
+endif()
+install(TARGETS tcluap
+    LIBRARY DESTINATION lib/tcluap${PROJECT_VERSION}
+    ARCHIVE DESTINATION lib/tcluap${PROJECT_VERSION}
+    RUNTIME DESTINATION lib/tcluap${PROJECT_VERSION})
 
-install(TARGETS ${TARGET}
-        LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/${TARGET}${PROJECT_VERSION}
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/${TARGET}${PROJECT_VERSION}
-        RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/${TARGET}${PROJECT_VERSION}
-)
-
-configure_file(pkgIndex.tcl.in pkgIndex.tcl @ONLY)
-
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/pkgIndex.tcl
-        DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/${TARGET}${PROJECT_VERSION}
-)
+if(BUILD_TESTING)
+    if(BUILD_SHARED_LIBS)
+        if(NOT TCL_TCLSH)
+            message(FATAL_ERROR "Tests require TCL_TCLSH; disable with BUILD_TESTING=OFF")
+        endif()
+        set(test_shell "${TCL_TCLSH}")
+        set(test_package_dir "${CMAKE_CURRENT_BINARY_DIR}")
+        if(UNIX AND CMAKE_NM)
+            add_test(NAME TclStubs COMMAND ${CMAKE_COMMAND}
+                -DNM=${CMAKE_NM} -DMODULE=$<TARGET_FILE:tcluap>
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/stubs.cmake)
+        endif()
+    else()
+        string(REGEX MATCH "^[0-9]+\\.[0-9]+" tcl_version "${TCL_VERSION}")
+        find_library(TCL_LIBRARY NAMES tcl${tcl_version} tcl
+            HINTS ${TCL_LIBRARY_DIR} "${TCL_INCLUDE_PATH}/../lib" REQUIRED)
+        add_executable(test_embed tests/embed.c)
+        target_include_directories(test_embed PRIVATE ${TCL_INCLUDE_PATH})
+        target_link_libraries(test_embed PRIVATE tcluap ${TCL_LIBRARY})
+        set(test_shell "$<TARGET_FILE:test_embed>")
+        set(test_package_dir "${CMAKE_CURRENT_BINARY_DIR}/static-tests")
+        file(MAKE_DIRECTORY "${test_package_dir}")
+        file(WRITE "${test_package_dir}/pkgIndex.tcl"
+            "package ifneeded uap ${PROJECT_VERSION} [list load {} Tcluap]\n")
+    endif()
+    add_test(NAME AllUnitTests COMMAND ${test_shell} ${CMAKE_CURRENT_SOURCE_DIR}/tests/all.tcl)
+    set_tests_properties(AllUnitTests PROPERTIES ENVIRONMENT
+        "TCLLIBPATH={${test_package_dir}};UAP_TEST_DATA_DIR=${UAP_TEST_DATA_DIR}")
+endif()

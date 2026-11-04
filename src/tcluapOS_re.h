@@ -201,4 +201,5 @@ UAPTCL_REGEX("\\((freebsd)(\\d+)\\.(\\d+)\\)", "FreeBSD", NULL, NULL, NULL, NULL
 UAPTCL_REGEX("linux", "Linux", NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)
 UAPTCL_REGEX("^(Roku)/DVP-(\\d+)\\.(\\d+)", NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)
 UAPTCL_REGEX("os\\/macos[#]?(\\d*)[.]?(\\d*)[.]?(\\d*)", "Mac OS X", NULL, "%s", "1", "%s", "2", "%s", "3", NULL, NULL)
-#define UAPTCL_REGEX_COUNT 203
+UAPTCL_REGEX("(HarmonyOS)[\\s;]+(\\d+|)\\.?(\\d+|)\\.?(\\d+|)", NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)
+#define UAPTCL_REGEX_COUNT 204

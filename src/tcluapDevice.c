@@ -24,7 +24,7 @@ static const struct {
 #define UAPTCL_REGEX(_regex, _family, _family_ph, _brand, _brand_ph, _model, _model_ph) \
     { .regex = _regex, .family = _family, .family_ph = _family_ph, \
       .brand = _brand, .brand_ph = _brand_ph, .model = _model, .model_ph = _model_ph },
-#include "tcluapDevice_re.h"
+#include <tcluapDevice_re.h>
 #undef UAPTCL_REGEX
     { NULL }
 };

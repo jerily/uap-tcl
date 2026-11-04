@@ -30,7 +30,7 @@ static const struct {
 #define UAPTCL_REGEX(_regex, _family, _family_ph, _v1, _v1_ph, _v2, _v2_ph, _v3, _v3_ph, _v4, _v4_ph) \
     { .regex = _regex, .family = _family, .family_ph = _family_ph, \
       .v1 = _v1, .v1_ph = _v1_ph, .v2 = _v2, .v2_ph = _v2_ph, .v3 = _v3, .v3_ph = _v3_ph, .v4 = _v4, .v4_ph = _v4_ph },
-#include "tcluapOS_re.h"
+#include <tcluapOS_re.h>
 #undef UAPTCL_REGEX
     { NULL }
 };
