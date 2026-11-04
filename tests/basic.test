@@ -96,4 +96,6 @@ test uapBasic-5.1 {Test memory free in thread} -constraints threaded -setup {
 
 test uapBasic-version-4 {Preserve the fourth user-agent version component} -body {
     ::uap::parse {HeyTapBrowser/45.13.4.1} ua
+} -cleanup {
+    catch { uap::reset_cache }
 } -result {family {HeyTap Browser} major 45 minor 13 patch 4 patch_minor 1}

@@ -66,7 +66,7 @@ jobs:
       - name: Run Tests
         working-directory: build
         run: |
-          make test || {
+          ctest --output-on-failure || {
             echo "::error::Failure during Test"
             exit 1
           }
