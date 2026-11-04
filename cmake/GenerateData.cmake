@@ -1,0 +1,11 @@
+set(arguments "${INPUT}")
+if(DEFINED SECTION)
+    list(PREPEND arguments "${SECTION}")
+endif()
+execute_process(COMMAND "${TCL_TCLSH}" "${SCRIPT}" ${arguments}
+    OUTPUT_FILE "${OUTPUT}.tmp" ERROR_VARIABLE error RESULT_VARIABLE status)
+if(NOT status EQUAL 0)
+    file(REMOVE "${OUTPUT}.tmp")
+    message(FATAL_ERROR "Data generation failed: ${error}")
+endif()
+file(RENAME "${OUTPUT}.tmp" "${OUTPUT}")

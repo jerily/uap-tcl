@@ -73,6 +73,8 @@
 {Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)} {family Other}
 {Mozilla/5.0 (X11; Datanyze; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36} {family Linux}
 {Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko; Google Web Preview) Chrome/27.0 .1453 Safari/537.36.} {family Linux}
+{Mozilla/5.0 (compatible; Google-InspectionTool/1.0;)} {family Other}
+{Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.6367.201 Mobile Safari/537.36 (compatible; Google-InspectionTool/1.0;)} {family Android major 6 minor 0 patch 1}
 {Bunjalloo/0.7.6(Nintendo DS;U;en)} {family Other}
 {Opera/9.50 (Nintendo DSi; Opera/507; U; en-US)} {family Other}
 {Mozilla/5.0 (Nintendo 3DS; U; ; en) Version/1.7498.US} {family Other}
@@ -478,3 +480,4 @@ PostmanRuntime/7.20.1 {family Other}
 {Boto3/1.28.62 md/Botocore#1.31.62 ua/2.0 os/macos#22.4.0 md/arch#arm64 lang/python#3.11.6 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.31.62} {family {Mac OS X} major 22 minor 4 patch 0}
 {APN/1.0 HashiCorp/1.0 Terraform/1.8.1 (+https://www.terraform.io) terraform-provider-aws/4.67.0 (+https://registry.terraform.io/providers/hashicorp/aws) aws-sdk-go-v2/1.18.0 os/macos lang/go/1.19.8 md/GOOS/darwin md/GOARCH/arm64 api/identitystore/1.16.11} {family {Mac OS X}}
 {APN/1.0 HashiCorp/1.0 Terraform/1.8.0 (+https://www.terraform.io) terraform-provider-aws/4.67.0 (+https://registry.terraform.io/providers/hashicorp/aws) aws-sdk-go/1.44.261 (go1.19.8; darwin; arm64)} {family {Mac OS X}}
+{Mozilla/5.0 (TAS-AL00 Build/HUAWEITAS-AL00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/97.0.4692.98 Mobile Safari/537.36 T7/13.76 BDOS/1.0 (HarmonyOS 3.0.0) SP-engine/3.17.0 baiduboxapp/13.76.0.10 (Baidu; P1 12) NABar/1.0} {family HarmonyOS major 3 minor 0 patch 0}

@@ -163,7 +163,6 @@ static int uap_ResetCacheCmd(ClientData clientData, Tcl_Interp *interp, int objc
 int Tcluap_Init(Tcl_Interp *interp) {
 
     if (Tcl_InitStubs(interp, MIN_VERSION, 0) == NULL) {
-        SetResult("Unable to initialize Tcl stubs");
         return TCL_ERROR;
     }
 

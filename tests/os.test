@@ -20,7 +20,7 @@ foreach fn {
     test_resources/additional_os_tests.data
 } {
 
-    set fp [open [file join [file dirname [info script]] data $fn] r]
+    set fp [open [file join $uap_test_data_dir $fn] r]
     set data [split [string trim [read $fp]] \n]
     close $fp
 

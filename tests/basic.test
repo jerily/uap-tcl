@@ -92,3 +92,10 @@ test uapBasic-5.1 {Test memory free in thread} -constraints threaded -setup {
     thread::release $tid
     unset tid
 } -result {ua {family Instabridge major 22} os {family Android major 11} device {family {Samsung SM-A225M} brand Samsung model SM-A225M} string {Mozilla/5.0 (Linux; Android 11; SM-A225M) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/85.0.4183.127 Mobile Safari/537.36 Instabridge/22}}
+
+
+test uapBasic-version-4 {Preserve the fourth user-agent version component} -body {
+    ::uap::parse {HeyTapBrowser/45.13.4.1} ua
+} -cleanup {
+    catch { uap::reset_cache }
+} -result {family {HeyTap Browser} major 45 minor 13 patch 4 patch_minor 1}

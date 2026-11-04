@@ -16052,6 +16052,8 @@ holmes/2.3 {family Spider brand Spider model Desktop}
 {Mozilla/5.0 (Linux; Android 7.0; ONEPLUS A3010 Build/NRD90M) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36} {family {OnePlus ONEPLUS A3010} brand OnePlus model {ONEPLUS A3010}}
 {Mozilla/5.0 (Linux; Android 5.1.1; ONE E1003 Build/LMY47V) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.91 Mobile Safari/537.36} {family {OnePlus ONE E1003} brand OnePlus model {ONE E1003}}
 {Mozilla/5.0 (Linux; Android 9; ONEPLUS A5010) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.89 Mobile Safari/537.36} {family {OnePlus ONEPLUS A5010} brand OnePlus model {ONEPLUS A5010}}
+{Mozilla/5.0 (Linux; Android 10; ONEPLUS A7010; ) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.185 Mobile Safari/537.36} {family {OnePlus ONEPLUS A7010} brand OnePlus model {ONEPLUS A7010}}
+{Mozilla/5.0 (Linux; Android 6.0.1; ONE E1003; ) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.185 Mobile Safari/537.36} {family {OnePlus ONE E1003} brand OnePlus model {ONE E1003}}
 {Mozilla/5.0 (Linux; Android 8.1.0; Pixel Build/OPM1.171019.012) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.137 Mobile Safari/537.36} {family Pixel brand Google model Pixel}
 {Mozilla/5.0 (Linux; Android 7.0; Pixel C Build/NRD90M; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/52.0.2743.98 Safari/537.36} {family {Pixel C} brand Google model {Pixel C}}
 {Mozilla/5.0 (Linux; Android 7.1.1; Pixel XL Build/NMF26F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36} {family {Pixel XL} brand Google model {Pixel XL}}
@@ -16068,6 +16070,8 @@ holmes/2.3 {family Spider brand Spider model Desktop}
 {Mozilla/5.0 (Linux; Android 7.0; EVA-AL10 Build/HUAWEIEVA-AL10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Mobile Safari/537.36} {family EVA-AL10 brand Huawei model EVA-AL10}
 {Google Web Preview} {family Spider brand Spider model Desktop}
 {Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko; Google Web Preview) Chrome/27.0 .1453 Safari/537.36.} {family Spider brand Spider model Desktop}
+{Mozilla/5.0 (compatible; Google-InspectionTool/1.0;)} {family Spider brand Spider model Desktop}
+{Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.6367.201 Mobile Safari/537.36 (compatible; Google-InspectionTool/1.0;)} {family Spider brand Spider model Smartphone}
 {Mozilla/5.0 (compatible; Qwantify/2.4w; +https://www.qwant.com/)/2.4w} {family Spider brand Spider model Desktop}
 {Mozilla/5.0 (compatible; MSIE 10.0; Windows Phone 8.0; Trident/6.0; IEMobile/10.0; ARM; Touch; rv:11; NOKIA; Lumia 920) like Gecko} {family {Lumia 920} brand Nokia model {Lumia 920}}
 {Mozilla/5.0 (Linux; U; Android 5.1; zh-cn; Build/LMY47D ) AppleWebKit/534.30 (KHTML,like Gecko) Version/5.1 Mobile Safari/534.30 GIONEE-GN3003/GN3003 RV/5.0.16 GNBR/5.1.0.cg Id/8D83E4532006ACCE31D712F4F73C8C70} {family {Gionee GN3003} brand Gionee model GN3003}

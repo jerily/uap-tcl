@@ -8,11 +8,12 @@ defaults:
 jobs:
   build:
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    timeout-minutes: 10
     strategy:
       matrix:
         compiler: ["gcc", "clang"]
-    name: build (${{ matrix.compiler }})
+        shared: ["ON", "OFF"]
+    name: build (${{ matrix.compiler }}, shared=${{ matrix.shared }})
     steps:
 
       - name: Setup Environment (compiler=${{ matrix.compiler }})
@@ -33,7 +34,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake .. -DCMAKE_INSTALL_PREFIX=$HOME/root -DCMAKE_PREFIX_PATH=$HOME/root -DTCL_INCLUDE_DIR=/usr/include/tcl8.6 -DTCL_LIBRARY_DIR=/usr/lib/x86_64-linux-gnu
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=${{ matrix.shared }} -DCMAKE_INSTALL_PREFIX=$HOME/root -DCMAKE_PREFIX_PATH=$HOME/root -DTCL_INCLUDE_DIR=/usr/include/tcl8.6 -DTCL_LIBRARY_DIR=/usr/lib/x86_64-linux-gnu
       - name: Build
         working-directory: build
         run: |
@@ -44,7 +45,7 @@ jobs:
       - name: Run Tests
         working-directory: build
         run: |
-          make test || {
+          ctest --output-on-failure || {
             echo "::error::Failure during Test"
             exit 1
           }
